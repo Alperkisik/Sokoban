@@ -14,8 +14,9 @@ public class CubeControl : MonoBehaviour
     public bool Collided = false;
     public int CubePositionX, CubePositionY;
     public bool movementRestricted = false;
+    public bool victoryTile;
 
-    int movementCount = 4;
+    public int movementCount = 4;
     // Start is called before the first frame update
     void Start()
     {

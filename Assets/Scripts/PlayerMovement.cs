@@ -7,18 +7,23 @@ public enum Direction { UP, DOWN, LEFT, RIGHT }
 public class PlayerMovement : MonoBehaviour
 {
     GameObject[,] tileMap;
-    int positionX, positionY;
+    public int positionX, positionY;
 
     float time = 0.0f;
+    float movement = 1.0f;
+
     public float movementPerSecond = 0.4f;
 
     MapGenerator mapGenerator;
     Direction direction;
 
     public bool allowMove = true;
+
+    GameObject floorTile;
     // Start is called before the first frame update
     void Start()
     {
+        floorTile = GameObject.FindGameObjectWithTag("MapGenerator").GetComponent<MapGenerator>().floorPrefab;
         mapGenerator = GameObject.FindGameObjectWithTag("MapGenerator").GetComponent<MapGenerator>();
         tileMap = mapGenerator.gridTiles;
         positionX = mapGenerator.playerPositionX;
@@ -39,11 +44,9 @@ public class PlayerMovement : MonoBehaviour
 
     void InputControls()
     {
-        float movement = 1.0f;
         float inputDirectionHorizontal = Input.GetAxis("Horizontal");
         float inputDirectionVertical = Input.GetAxis("Vertical");
-        bool doubleMovement = false;
-        bool gettingInput = false;
+        bool doubleMovement = false, gettingInput = false;
 
         if (inputDirectionHorizontal != 0 && inputDirectionVertical != 0) doubleMovement = true; else doubleMovement = false;
         if (inputDirectionHorizontal != 0 || inputDirectionVertical != 0) gettingInput = true; else gettingInput = false;
@@ -86,16 +89,19 @@ public class PlayerMovement : MonoBehaviour
                 direction = Direction.DOWN;
             }
 
-            if(!CheckforWalls(positionX, positionY))
+            if(!CheckObstackles(positionX, positionY))
             {
-                bool allowCharacterMovement = CheckCubesOnDirection(positionX, positionY,direction);
-                if (allowCharacterMovement)
+                MovePlayer(x, y, z);
+            }
+            else if(CheckForCubes(positionX, positionY))
+            {
+                bool cubeMoved = CubeMoved(positionX, positionY, direction);
+                if (cubeMoved == true) 
+                    MovePlayer(x, y, z);
+                else
                 {
-                    Vector3 position = new Vector3(x, y, z);
-                    transform.position = position;
-                    tileMap[positionX, positionY] = gameObject;
-                    tileMap[beforeX, beforeY] = mapGenerator.floorPrefab;
-                    setTileMap();
+                    positionX = beforeX;
+                    positionY = beforeY;
                 }
             }
             else
@@ -106,80 +112,91 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
-    bool CheckCubesOnDirection(int x, int y, Direction direction)
+    void MovePlayer(float x,float y,float z)
     {
-        bool allowCharacterMovement = false;
+        Vector3 position = new Vector3(x, y, z);
+        transform.position = position;
+    }
+
+    bool CubeMoved(int x, int y, Direction direction)
+    {
+        int cubeX = x, cubeY = y;
+        GameObject cubeObject = tileMap[x, y];
+        if (cubeObject.GetComponent<CubeControl>().victoryTile == true) return true;
+
+        switch (direction)
+        {
+            case Direction.UP:
+                cubeY = y + 1;
+                break;
+            case Direction.DOWN:
+                cubeY = y - 1;
+                break;
+            case Direction.LEFT:
+                cubeX = x - 1;
+                break;
+            case Direction.RIGHT:
+                cubeX = x + 1;
+                break;
+            default:
+                break;
+        }
+
+        if (CheckObstackles(cubeX, cubeY) == false)
+        {
+            if (cubeObject.GetComponent<CubeControl>().Moved() == true)
+            {
+                SetTile(x, y, floorTile);
+                MoveCube(cubeObject, cubeX, cubeY);
+                return true;
+            }
+            else return false;
+        }
+        else if(CheckForCubes(cubeX, cubeY) == true)
+        {
+            GameObject nextTileObject = tileMap[cubeX, cubeY];
+            if (nextTileObject.GetComponent<CubeControl>().victoryTile == true) 
+            {
+                if (cubeObject.GetComponent<CubeControl>().Moved() == true)
+                {
+                    SetTile(x, y, floorTile);
+                    MoveCube(cubeObject, cubeX, cubeY);
+
+                    cubeObject.GetComponent<CubeControl>().movementRestricted = true;
+                    cubeObject.GetComponent<CubeControl>().movementCount = 0;
+                    return true;
+                }
+                else return false;
+            }
+            else return false;
+        }
+        else return false;
+    }
+
+    void MoveCube(GameObject Cube,int x,int y)
+    {
+        Vector3 position = new Vector3(x, Cube.transform.position.y, y);
+        Cube.transform.position = position;
+
+        Cube.GetComponent<CubeControl>().CubePositionX = x;
+        Cube.GetComponent<CubeControl>().CubePositionY = y;
+
+        if (tileMap[x, y].tag == "Pit") SetTile(x, y, floorTile);
+        else SetTile(x, y, Cube);
+
+        setTileMap();
+        GameObject.FindGameObjectWithTag("LevelController").GetComponent<LevelController>().CheckVictoryCondition();
+    }
+
+    void SetTile(int x,int y,GameObject tile)
+    {
+        tileMap[x, y] = tile;
+    }
+
+    bool CheckObstackles(int x, int y)
+    {
         GameObject tileObject = tileMap[x, y];
-        int newX = x, newY = y;
-        if (tileObject.tag == "RedCube" || tileObject.tag == "GreenCube")
-        {
-            bool wallOnDirection = false;
-            bool cubeOndirection = false;
-            switch (direction)
-            {
-                case Direction.UP:
-                    wallOnDirection = CheckforWalls(x, y + 1);
-                    cubeOndirection = CheckForCubes(x, y + 1);
-                    newY = y + 1;
-                    break;
-                case Direction.DOWN:
-                    wallOnDirection = CheckforWalls(x, y - 1);
-                    cubeOndirection = CheckForCubes(x, y - 1);
-                    newY = y - 1;
-                    break;
-                case Direction.LEFT:
-                    wallOnDirection = CheckforWalls(x - 1, y);
-                    cubeOndirection = CheckForCubes(x - 1, y);
-                    newX = x - 1;
-                    break;
-                case Direction.RIGHT:
-                    wallOnDirection = CheckforWalls(x + 1, y);
-                    cubeOndirection = CheckForCubes(x + 1, y);
-                    newX = x + 1;
-                    break;
-                default:
-                    break;
-            }
-
-            if (!wallOnDirection && !cubeOndirection)
-            {
-                if(tileObject.GetComponent<CubeControl>().Moved() == true)
-                {
-                    Vector3 position = new Vector3(newX, tileObject.transform.position.y, newY);
-                    tileObject.transform.position = position;
-
-                    tileObject.GetComponent<CubeControl>().CubePositionX = newX;
-                    tileObject.GetComponent<CubeControl>().CubePositionY = newY;
-
-                    if(tileMap[newX, newY].tag == "Pit")
-                    {
-                        tileMap[newX, newY] = GameObject.FindGameObjectWithTag("MapGenerator").GetComponent<MapGenerator>().floorPrefab;
-                    }
-                    else
-                    {
-                        tileMap[newX, newY] = tileObject;
-                    }
-
-                    setTileMap();
-                    GameObject.FindGameObjectWithTag("LevelController").GetComponent<LevelController>().CheckVictoryCondition();
-
-                    allowCharacterMovement = true;
-                }
-                else
-                {
-                    allowCharacterMovement = false;
-                }
-            }
-            else
-            {
-                allowCharacterMovement = false;
-            }
-        }
-        else
-        {
-            allowCharacterMovement = true;
-        }
-        return allowCharacterMovement;
+        if (tileObject.tag == "Wall" || tileObject.tag == "RedCube" || tileObject.tag == "GreenCube") return true; else return false;
     }
 
     bool CheckforWalls(int x,int y)
@@ -191,7 +208,7 @@ public class PlayerMovement : MonoBehaviour
     bool CheckForCubes(int x,int y)
     {
         GameObject tileObject = tileMap[x, y];
-        if (tileObject.name == "Red Cube" || tileObject.name == "Green Cube") return true; else return false;
+        if (tileObject.tag == "RedCube" || tileObject.tag == "GreenCube") return true; else return false;
     }
 
     void setTileMap()

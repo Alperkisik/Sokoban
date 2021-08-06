@@ -61,12 +61,16 @@ public class MapGenerator : MonoBehaviour
             GameObject mapObject;
             for (int y = 0; y < height; y++)
             {
+                floorPrefab.GetComponent<TileControl>().x = x;
+                floorPrefab.GetComponent<TileControl>().y = y;
                 mapObject = Instantiate(floorPrefab, new Vector3(x, 0, y), Quaternion.identity);
                 mapObject.transform.SetParent(gameObject.transform);
                 mapObject.name = "Tile " + x + "," + y;
                 mapObjects.Add(mapObject);
                 if (x == 0 || x == (width - 1) || y == 0 || y == (height - 1))
                 {
+                    wallPrefab.GetComponent<TileControl>().x = x;
+                    wallPrefab.GetComponent<TileControl>().y = y;
                     mapObject = Instantiate(wallPrefab, new Vector3(x, 1.5f, y), Quaternion.identity);
                     mapObject.transform.SetParent(gameObject.transform);
                     mapObject.name = "Wall " + x + "," + y;
@@ -134,7 +138,7 @@ public class MapGenerator : MonoBehaviour
         player.name = "Player";
         player.transform.SetParent(GameObject.FindGameObjectWithTag("LevelController").transform);
         mapObjects.Add(player);
-        gridTiles[playerPositionX, playerPositionY] = playerPrefab;
+        //gridTiles[playerPositionX, playerPositionY] = playerPrefab;
     }
 
     void SpawnWalls(int width,int height,int startPositionX,int startPositionY)
@@ -164,6 +168,7 @@ public class MapGenerator : MonoBehaviour
         redCube.GetComponent<CubeControl>().CubePositionX = x;
         redCube.GetComponent<CubeControl>().CubePositionY = y;
         redCube.GetComponent<CubeControl>().movementRestricted = movementRestricted;
+        redCube.GetComponent<CubeControl>().victoryTile = false;
         mapObjects.Add(redCube);
         gridTiles[x, y] = redCube;
     }
@@ -177,6 +182,7 @@ public class MapGenerator : MonoBehaviour
         greenCube.GetComponent<CubeControl>().CubePositionX = x;
         greenCube.GetComponent<CubeControl>().CubePositionY = y;
         greenCube.GetComponent<CubeControl>().movementRestricted = movementRestricted;
+        greenCube.GetComponent<CubeControl>().victoryTile = false;
         mapObjects.Add(greenCube);
 
         gridTiles[x, y] = greenCube;
@@ -196,7 +202,9 @@ public class MapGenerator : MonoBehaviour
         redCubeTile.GetComponent<CubeControl>().CubePositionX = spawnPositionX;
         redCubeTile.GetComponent<CubeControl>().CubePositionY = spawnPositionY;
         redCubeTile.transform.SetParent(gameObject.transform);
-
+        redCubeTile.GetComponent<CubeControl>().victoryTile = true;
+        
+        Destroy(redCubeTile.GetComponent<Rigidbody>());
         mapObjects.Add(redCubeTile);
 
         gridTiles[spawnPositionX, spawnPositionY] = redCubeTile;
@@ -215,7 +223,9 @@ public class MapGenerator : MonoBehaviour
         greenCubeTile = Instantiate(greenCubeTile, new Vector3(x, 0f, y), Quaternion.identity);
         greenCubeTile.transform.SetParent(gameObject.transform);
         greenCubeTile.name = "Green Cube Tile " + spawnPositionX + "," + spawnPositionY;
-
+        greenCubeTile.GetComponent<CubeControl>().victoryTile = true;
+        
+        Destroy(greenCubeTile.GetComponent<Rigidbody>());
         mapObjects.Add(greenCubeTile);
         gridTiles[spawnPositionX, spawnPositionY] = greenCubeTile;
 

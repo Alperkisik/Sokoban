@@ -5052,6 +5052,7 @@ GameObject:
   - component: {fileID: 5488790092569266219}
   - component: {fileID: 2495150967486942051}
   - component: {fileID: -4971427689209992205}
+  - component: {fileID: 8117587644348340788}
   m_Layer: 0
   m_Name: GreenCube
   m_TagString: GreenCube
@@ -5155,6 +5156,8 @@ MonoBehaviour:
   CubePositionX: 0
   CubePositionY: 0
   movementRestricted: 0
+  victoryTile: 0
+  movementCount: 4
 --- !u!54 &-4971427689209992205
 Rigidbody:
   m_ObjectHideFlags: 0
@@ -5171,3 +5174,15 @@ Rigidbody:
   m_Interpolate: 0
   m_Constraints: 112
   m_CollisionDetection: 0
+--- !u!114 &8117587644348340788
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 9078853412761678325}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 24086c85e49ff7c47a85de691d67b8d9, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 

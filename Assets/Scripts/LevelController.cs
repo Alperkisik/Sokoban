@@ -38,8 +38,7 @@ public class LevelController : MonoBehaviour
             CubeControl cubeControl = cube.GetComponent<CubeControl>();
 
             GameObject gridObject = grids[victoryPoint.x, victoryPoint.y];
-
-            if (cubeControl.Collided == true && gridObject.tag == cube.tag )
+            if (cubeControl.Collided == true && gridObject.tag == cube.tag && gridObject.GetComponent<CubeControl>().victoryTile == false)
             {
                 cubeControl.playParticles();
                 allVictoryConditionsTrue = true;
