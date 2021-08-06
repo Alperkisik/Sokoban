@@ -16,7 +16,7 @@ public class MainMenuController : MonoBehaviour
     {
         int level = SaveSystem.LoadGameDatas();
 
-        else if(level >= 0 || level < 3)
+        if(level >= 0 || level < 3)
         {
             GameObject.FindGameObjectWithTag("GameDatas").GetComponent<GameDatas>().level = level + 1;
         }
